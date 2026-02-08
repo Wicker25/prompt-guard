@@ -26,6 +26,8 @@ import { showNotification } from './components/Notification';
 
 let isProcessingSubmit = false;
 
+const SYSTEM_PROMPT_MARKER = '**SYSTEM INSTRUCTIONS**:';
+
 const syncExtensionStatus = (status: ExtensionStatus): void => {
   document.body.dataset.pgStatus = status;
 };
@@ -81,6 +83,18 @@ const redactPromptText = async (promptText: string): Promise<string> => {
 
   if (detectedPII.length > 0) {
     showNotification(`Protected ${detectedPII.length} personal data item(s).`);
+  }
+
+  if (detectedPII.length > 0) {
+    const systemPrompt =
+      `${SYSTEM_PROMPT_MARKER}:\n\n` +
+      '1) Bracketed tokens such as [EMAIL_X], [NAME_X], etc. are literal user-provided values, not placeholders. ' +
+      'They are immutable: copy them exactly as written. Do not ask the user to replace, interpret, or confirm them.\n\n' +
+      '2) Output format requirement: respond ONLY in normal chat/plain text. ' +
+      'Do NOT use any editor-style output, including writing blocks, draft blocks, or any special "composer/editor" UI formatting.\n\n' +
+      '3) Do not use the canvas feature.';
+
+    return redactedText + '\n\n' + systemPrompt;
   }
 
   return redactedText;
@@ -309,6 +323,22 @@ const restorePIIInMessageElement = async (
   }
 };
 
+const removeSystemPromptFromElement = async (element: HTMLElement): Promise<void> => {
+  const textNodes = findTextNodes(element);
+
+  for (const textNode of textNodes) {
+    const text = textNode.textContent || '';
+    const markerIndex = text.indexOf(SYSTEM_PROMPT_MARKER);
+
+    if (markerIndex === -1) {
+      continue;
+    }
+
+    const cleanText = text.slice(0, markerIndex).trimEnd();
+    textNode.textContent = cleanText;
+  }
+};
+
 const restorePIIInMessages = async (): Promise<void> => {
   const redactions = await getChatRedactions();
 
@@ -319,6 +349,7 @@ const restorePIIInMessages = async (): Promise<void> => {
   const promptMessageElements = getPromptMessageElements();
 
   for (const promptMessageElement of promptMessageElements) {
+    await removeSystemPromptFromElement(promptMessageElement);
     await restorePIIInMessageElement(promptMessageElement, redactions);
   }
 };
