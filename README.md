@@ -26,6 +26,10 @@ PromptGuard intercepts your message before it's sent, replaces any detected sens
 
 ![What ChatGPT actually receives](docs/prompt-real.png)
 
+## Supported AI chats
+
+- ChatGPT
+
 ## Installation
 
 1. Clone this repository
