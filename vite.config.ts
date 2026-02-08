@@ -29,6 +29,14 @@ const build = () => {
       const manifestPath = resolve(firefoxDir, 'manifest.json');
       const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
 
+      manifest.browser_specific_settings = {
+        gecko: {
+          id: 'promptguard@wicker25',
+          strict_min_version: '128.0',
+          data_collection_permissions: { required: ['none'] },
+        },
+      };
+
       if (manifest.background?.service_worker) {
         const script = manifest.background.service_worker;
         manifest.background = { scripts: [script], type: 'module' };
