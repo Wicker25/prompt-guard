@@ -59,6 +59,20 @@ const setChatRedactions = async (chatId: string, redactionMap: RedactionMap): Pr
   await setStorageValue(`chat_${chatId}`, redactionMap);
 };
 
+const migratePendingChatRedactions = async (chatId: string): Promise<void> => {
+  const redactionMap = await getChatRedactions('pending');
+  const excludedPII = await getChatExcludedPII('pending');
+
+  if (Object.keys(redactionMap).length === 0 && excludedPII.length === 0) {
+    return;
+  }
+
+  await setChatRedactions(chatId, redactionMap);
+  await setChatExcludedPII(chatId, excludedPII);
+
+  await browser.storage.session.remove(['chat_pending', 'excludedPII_pending']);
+};
+
 const getChatExcludedPII = async (chatId: string): Promise<string[]> => {
   return (await getStorageValue<string[]>(`excludedPII_${chatId}`)) || [];
 };
@@ -75,7 +89,15 @@ const initialize = async (): Promise<void> => {
     refreshExtensionIcon();
   });
 
-  browser.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+    if (changeInfo.url && tab.url) {
+      const chatId = parseChatIdFromUrl(tab.url);
+
+      if (chatId !== 'pending') {
+        migratePendingChatRedactions(chatId);
+      }
+    }
+
     if (changeInfo.status === 'complete') {
       refreshExtensionIcon();
     }
