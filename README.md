@@ -4,17 +4,19 @@ A simple browser extension that tries to help protect your personal data while c
 
 ## What it does
 
-When you type a message in ChatGPT, PromptGuard attempts to detect sensitive information like email addresses, phone numbers, and names, and replaces them with placeholders before your message is sent. The original values are restored visually in the chat so you can still read your conversation naturally.
+When you type a message in ChatGPT, PromptGuard attempts to detect sensitive information like email addresses, phone numbers, names, and API keys, and replaces them with placeholders before your message is sent. The original values are restored visually in the chat so you can still read your conversation naturally.
 
 ## Features
 
-- Detects common PII types: emails, phone numbers, credit cards, SSNs, IP addresses, names, locations, and organizations
+- Detects common PII types: emails, phone numbers, credit cards, SSNs, IP addresses, names, locations, organizations, and secrets (API keys, tokens, passwords)
 - Replaces detected values with placeholders (e.g., `[EMAIL_1]`, `[NAME_1]`)
 - Shows original values as green badges in the chat
 - Allows excluding specific values from detection
 - Scoped per chat session
 
 ## How it works
+
+PromptGuard intercepts your message before it's sent, replaces any detected sensitive data with placeholders like `[EMAIL_1]` or `[NAME_1]`, and restores the original values visually in the chat so your conversation remains readable.
 
 **What you see:**
 
