@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite build --watch --mode development",
     "build": "vite build",
+    "package": "vite build && cd dist/firefox && zip -r ../promptguard-firefox.xpi . && cd ../chrome && zip -r ../promptguard-chrome.zip .",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
