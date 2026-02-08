@@ -251,15 +251,12 @@ const attachPromptSubmitHandler = (promptSubmitElement: HTMLButtonElement): void
   );
 };
 
-const restorePIIInTextNode = async (
-  textNode: Text,
-  redactionMap: RedactionMap
-): Promise<boolean> => {
+const restorePIIInTextNode = async (textNode: Text, redactionMap: RedactionMap): Promise<void> => {
   const text = textNode.textContent || '';
   const matches = [...text.matchAll(/\[([A-Z_]+)_(\d+)\]/g)].filter((m) => redactionMap[m[0]]);
 
   if (matches.length === 0) {
-    return false;
+    return;
   }
 
   const fragment = document.createDocumentFragment();
@@ -299,19 +296,12 @@ const restorePIIInTextNode = async (
   }
 
   textNode.parentNode?.replaceChild(fragment, textNode);
-  return true;
 };
 
 const restorePIIInMessageElement = async (
   element: HTMLElement,
   redactionMap: RedactionMap
 ): Promise<void> => {
-  if (element.dataset.pgManaged) {
-    return;
-  }
-
-  element.dataset.pgManaged = 'true';
-
   const textNodes = findTextNodes(
     element,
     (node) => !!(node.parentNode as Element)?.closest('.pg-placeholder-chip')
@@ -345,25 +335,21 @@ const initialize = async (): Promise<void> => {
 
   initializePlaceholderChip();
 
-  // Reconnect the elements whenever the DOM changes
+  // Reconnect the elements whenever the DOM changes and ensure the redacted PII is automatically
+  // restored on the page
   let restoreTimeout: number | null = null;
 
   const mutationObserver = new MutationObserver(() => {
     const currentInputElement = getPromptInputElement();
     const currentSubmitElement = getPromptSubmitElement();
 
-    if (!currentInputElement || !currentSubmitElement) {
-      return;
+    if (currentInputElement && currentInputElement !== promptInputElement) {
+      promptInputElement = currentInputElement;
+      attachPromptInputHandler(promptInputElement);
     }
 
-    if (
-      currentInputElement !== promptInputElement ||
-      currentSubmitElement !== promptSubmitElement
-    ) {
-      promptInputElement = currentInputElement;
+    if (currentSubmitElement && currentSubmitElement !== promptSubmitElement) {
       promptSubmitElement = currentSubmitElement;
-
-      attachPromptInputHandler(promptInputElement);
       attachPromptSubmitHandler(promptSubmitElement);
     }
 
