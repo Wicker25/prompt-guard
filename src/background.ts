@@ -9,6 +9,7 @@ import {
   EXTENSION_ICONS,
   EXTENSION_ICONS_GREY,
   EXTENSION_STATUS_ENABLED,
+  EXTENSION_STATUS_UNSUPPORTED,
   MESSAGE_SET_EXTENSION_STATUS,
   MESSAGE_GET_EXTENSION_STATUS,
   MESSAGE_SET_CHAT_REDACTIONS,
@@ -17,7 +18,7 @@ import {
   MESSAGE_GET_CHAT_EXCLUDED_PII,
   MESSAGE_GET_CHAT_ID,
 } from './constants';
-import { parseChatIdFromUrl } from './helpers/url';
+import { parseChatIdFromUrl, isSupportedPlatformUrl } from './helpers/url';
 
 const getStorageValue = async <T>(key: string): Promise<T | undefined> => {
   const storage = await browser.storage.session.get(key);
@@ -29,11 +30,21 @@ const setStorageValue = async <T>(key: string, value: T): Promise<void> => {
 };
 
 const refreshExtensionIcon = async (): Promise<void> => {
-  const status = (await getStorageValue<string>('status')) || EXTENSION_STATUS_ENABLED;
+  const extensionStatus = await fetchExtensionStatus();
 
   browser.action.setIcon({
-    path: status === EXTENSION_STATUS_ENABLED ? EXTENSION_ICONS : EXTENSION_ICONS_GREY,
+    path: extensionStatus === EXTENSION_STATUS_ENABLED ? EXTENSION_ICONS : EXTENSION_ICONS_GREY,
   });
+};
+
+const fetchExtensionStatus = async (): Promise<string> => {
+  const [activeTab] = await browser.tabs.query({ active: true, currentWindow: true });
+
+  if (!activeTab?.url || !isSupportedPlatformUrl(activeTab.url)) {
+    return EXTENSION_STATUS_UNSUPPORTED;
+  }
+
+  return (await getStorageValue<string>('status')) || EXTENSION_STATUS_ENABLED;
 };
 
 const fetchChatId = async (sender: Runtime.MessageSender): Promise<string> => {
@@ -84,22 +95,21 @@ const setChatExcludedPII = async (chatId: string, list: string[]): Promise<void>
 const initialize = async (): Promise<void> => {
   await refreshExtensionIcon();
 
-  // Update the icon when a tab becomes active or finishes loading
-  browser.tabs.onActivated.addListener(() => {
-    refreshExtensionIcon();
+  browser.tabs.onActivated.addListener(async () => {
+    await refreshExtensionIcon();
   });
 
-  browser.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+  browser.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
     if (changeInfo.url && tab.url) {
       const chatId = parseChatIdFromUrl(tab.url);
 
       if (chatId !== 'pending') {
-        migratePendingChatRedactions(chatId);
+        await migratePendingChatRedactions(chatId);
       }
     }
 
     if (changeInfo.status === 'complete') {
-      refreshExtensionIcon();
+      await refreshExtensionIcon();
     }
   });
 
@@ -134,10 +144,8 @@ const initialize = async (): Promise<void> => {
       }
 
       case MESSAGE_GET_EXTENSION_STATUS: {
-        const status = await getStorageValue<string>('status');
-
         return {
-          status: status || EXTENSION_STATUS_ENABLED,
+          status: await fetchExtensionStatus(),
         } as MessageGetExtensionStatusResponse;
       }
 

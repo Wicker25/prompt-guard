@@ -2,29 +2,21 @@ import { setExtensionStatus, getExtensionStatus, getChatRedactions, getChatId } 
 import { EXTENSION_STATUS_ENABLED, EXTENSION_STATUS_DISABLED } from '../constants';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const statusToggle = document.getElementById('statusToggle') as HTMLInputElement;
-  const chatIdElement = document.getElementById('chatId')!;
-  const redactionCount = document.getElementById('redactionCount')!;
+  const extensionStatus = await getExtensionStatus();
+  document.body.dataset.pgStatus = extensionStatus;
 
-  const loadExtensionStatus = async (): Promise<void> => {
-    const status = await getExtensionStatus();
-    statusToggle.checked = status === EXTENSION_STATUS_ENABLED;
-  };
+  const statusToggleElement = document.getElementById('statusToggle') as HTMLInputElement;
+  statusToggleElement.checked = extensionStatus === EXTENSION_STATUS_ENABLED;
 
-  const loadChatId = async (): Promise<void> => {
-    chatIdElement.textContent = await getChatId();
-  };
-
-  const loadRedactionCount = async (): Promise<void> => {
-    const redactions = await getChatRedactions();
-    redactionCount.textContent = String(Object.keys(redactions).length);
-  };
-
-  statusToggle.addEventListener('change', async () => {
-    setExtensionStatus(statusToggle.checked ? EXTENSION_STATUS_ENABLED : EXTENSION_STATUS_DISABLED);
+  statusToggleElement.addEventListener('change', async () => {
+    setExtensionStatus(
+      statusToggleElement.checked ? EXTENSION_STATUS_ENABLED : EXTENSION_STATUS_DISABLED
+    );
   });
 
-  await loadExtensionStatus();
-  await loadChatId();
-  await loadRedactionCount();
+  const chatIdElement = document.getElementById('chatId')!;
+  chatIdElement.textContent = await getChatId();
+
+  const redactionCountElement = document.getElementById('redactionCount')!;
+  redactionCountElement.textContent = String(Object.keys(await getChatRedactions()).length);
 });

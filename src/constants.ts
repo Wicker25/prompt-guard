@@ -1,5 +1,6 @@
 export const EXTENSION_STATUS_ENABLED = 'enabled';
 export const EXTENSION_STATUS_DISABLED = 'disabled';
+export const EXTENSION_STATUS_UNSUPPORTED = 'unsupported';
 
 export const EXTENSION_ICONS = {
   48: 'icons/icon-48.png',
@@ -10,6 +11,14 @@ export const EXTENSION_ICONS_GREY = {
   48: 'icons/icon-48-grey.png',
   96: 'icons/icon-96-grey.png',
 } as const;
+
+export const PLATFORM_DOMAIN_CHATGPT = 'chatgpt.com';
+export const PLATFORM_DOMAIN_CHAT_OPENAI = 'chat.openai.com';
+
+export const SUPPORTED_PLATFORM_DOMAINS = [
+  PLATFORM_DOMAIN_CHATGPT,
+  PLATFORM_DOMAIN_CHAT_OPENAI,
+] as const;
 
 export const PII_EMAIL = 'EMAIL';
 export const PII_PHONE = 'PHONE';

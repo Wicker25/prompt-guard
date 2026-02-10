@@ -8,6 +8,7 @@ import {
   MESSAGE_GET_CHAT_ID,
   EXTENSION_STATUS_ENABLED,
   EXTENSION_STATUS_DISABLED,
+  EXTENSION_STATUS_UNSUPPORTED,
   PII_STATUS_PROTECTED,
   PII_STATUS_EXCLUDED,
   PII_EMAIL,
@@ -22,7 +23,10 @@ import {
   PII_SECRET,
 } from './constants';
 
-export type ExtensionStatus = typeof EXTENSION_STATUS_ENABLED | typeof EXTENSION_STATUS_DISABLED;
+export type ExtensionStatus =
+  | typeof EXTENSION_STATUS_ENABLED
+  | typeof EXTENSION_STATUS_DISABLED
+  | typeof EXTENSION_STATUS_UNSUPPORTED;
 
 export type PIIType =
   | typeof PII_EMAIL

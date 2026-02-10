@@ -12,6 +12,11 @@ body {
   width: 380px;
 }
 
+body[data-pg-status='unsupported'] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .container {
   display: flex;
   flex-direction: column;
